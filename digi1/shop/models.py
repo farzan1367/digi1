@@ -6,6 +6,7 @@ from datetime import datetime
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.utils.text import slugify
+from django.utils import timezone
 
 class Category(models.Model):
     name = models.CharField(max_length=150)
@@ -66,6 +67,7 @@ class Brand(models.Model):
 
 class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, default=1,related_name='products')
+    brand = models.ForeignKey(Brand, on_delete=models.CASCADE,related_name='products',null=True,blank=True)
     name = models.CharField(max_length=300)
     # slug = models.SlugField(unique=True)
     description= models.TextField()
@@ -88,7 +90,7 @@ class Order(models.Model):
     quantitiy=models.IntegerField(default=1)
     adress=models.CharField(max_length=500,default="",blank=False)
     phone=models.CharField(max_length=20,blank=True)
-    date=models.DateField(default=datetime.now())
+    date=models.DateField(default=datetime.now)
     statuse=models.BooleanField(default=False)
 
 
