@@ -84,6 +84,30 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
+
+class ProductMedia(models.Model):
+    MEDIA_TYPE = (
+        ('image','Image'),
+        ('video','Video'),
+    )
+    product = models.ForeignKey(Product,on_delete=models.CASCADE,related_name='media')
+    file = models.FileField(upload_to='upload/product/media/')
+    media_type = models.CharField(max_length=10,choices=MEDIA_TYPE,editable=False)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    def save(self, *args, **kwargs):
+        if self.file:
+            extension = self.file.name.lower().split('.')[-1]
+
+            if extension in ['jpg','jpeg','png','webp','gif']:
+                self.media_type = 'image'
+            elif extension in ['mp4','webm','mov','avi']:
+                self.media_type = 'video'
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.product.name
+
 class Order(models.Model):
     customer=models.ForeignKey(Customer ,on_delete=models.CASCADE)
     product=models.ForeignKey(Product ,on_delete=models.CASCADE)
@@ -95,4 +119,4 @@ class Order(models.Model):
 
 
     def __str__(self):
-        return   self.product      
+        return   self.product.name
