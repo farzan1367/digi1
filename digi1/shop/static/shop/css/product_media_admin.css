@@ -1,0 +1,231 @@
+.media-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.media-actions button {
+    border: none;
+    border-radius: 6px;
+    padding: 7px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.media-drag-handle {
+    background: #f1f3f5;
+    color: #333;
+    cursor: grab !important;
+}
+
+.media-drag-handle:hover {
+    background: #e2e6ea;
+}
+
+.media-drag-handle:active {
+    cursor: grabbing !important;
+    transform: scale(0.97);
+}
+
+.media-delete-button {
+    background: #dc3545;
+    color: white;
+}
+
+.media-delete-button:hover {
+    background: #bb2d3b;
+    transform: translateY(-1px);
+}
+
+.media-delete-button:active {
+    transform: translateY(0);
+}
+
+.drag-icon {
+    font-size: 17px;
+    line-height: 1;
+}
+
+.delete-icon {
+    font-size: 13px;
+    line-height: 1;
+}
+
+
+
+
+/* ================================
+   Bulk Media Upload
+   ================================ */
+
+.bulk-media-upload {
+    margin-top: 30px;
+    padding: 24px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.bulk-media-header {
+    margin-bottom: 20px;
+}
+
+.bulk-media-header h2 {
+    margin: 0 0 6px;
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+}
+
+.bulk-media-header p {
+    margin: 0;
+    color: #777;
+    font-size: 13px;
+}
+
+/* Dropzone */
+
+.media-upload-dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 170px;
+    padding: 25px;
+
+    border: 2px dashed #bbb;
+    border-radius: 8px;
+
+    background: #fafafa;
+
+    cursor: pointer;
+    text-align: center;
+
+    transition: all 0.2s ease;
+}
+
+.media-upload-dropzone:hover {
+    border-color: #417690;
+    background: #f7fafc;
+}
+
+.media-upload-dropzone.drag-over {
+    border-color: #417690;
+    background: #eef6fa;
+}
+
+.upload-icon {
+    width: 48px;
+    height: 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-bottom: 12px;
+
+    border-radius: 50%;
+
+    background: #417690;
+    color: #fff;
+
+    font-size: 28px;
+    font-weight: 300;
+}
+
+.upload-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+}
+
+.upload-description {
+    margin-top: 6px;
+    font-size: 13px;
+    color: #777;
+}
+
+.upload-formats {
+    margin-top: 8px;
+    font-size: 11px;
+    color: #999;
+}
+
+/* Selected files count */
+
+.media-upload-count {
+    margin-top: 15px;
+    padding: 8px 12px;
+
+    border-radius: 5px;
+
+    background: #f1f3f5;
+    color: #555;
+
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* Preview container */
+
+.product-media-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+/* Upload button */
+
+.bulk-media-upload .media-upload-button {
+    border: 0 !important;
+    border-radius: 6px !important;
+
+    padding: 9px 18px !important;
+
+    min-height: 38px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    margin-top: 20px;
+
+    background: #417690 !important;
+    color: #fff !important;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+}
+
+.bulk-media-upload .media-upload-button:hover {
+    background: #2f5d73 !important;
+    color: #fff !important;
+    transform: translateY(-1px);
+}
+
+.bulk-media-upload .media-upload-button:active {
+    transform: translateY(0);
+}
+
+.bulk-media-upload .media-upload-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.upload-button-icon {
+    font-size: 17px;
+    line-height: 1;
+}

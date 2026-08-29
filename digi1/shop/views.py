@@ -10,6 +10,7 @@ from django.views.generic.list import ListView
 from  django.views.generic.detail import DetailView
 from django.db.models import Q
 from django.views.decorators.http import require_POST
+from django.db import transaction
 from .forms import SignUpForm ,UpdateUserForm,UpdatePasswordForm,UpdateUserInfo
 from cart.cart import Cart
 from payment.forms import ShippingForm
@@ -118,6 +119,7 @@ def delete_product_media(request, product_id,media_id):
 
 @require_POST
 def reorder_product_media(request, product_id):
+
     if not request.user.is_staff:
         return JsonResponse(
             {
@@ -126,43 +128,83 @@ def reorder_product_media(request, product_id):
             },
             status=403
         )
-    product = get_object_or_404(Product, id=product_id)
+
+    product = get_object_or_404(
+        Product,
+        id=product_id
+    )
 
     try:
         data = json.loads(request.body)
-        media_ids = data.get('order',[])
-    except(Json.JSONDecodeError, KeyError):
-        return JsonResponse({
-            'success': False,
-            'message': 'Invalid JSON.'
-        },status=400
+        media_ids = data.get('order', [])
+
+    except (json.JSONDecodeError, TypeError):
+        return JsonResponse(
+            {
+                'success': False,
+                'message': 'Invalid JSON.'
+            },
+            status=400
         )
+
     if not isinstance(media_ids, list):
-        return JsonResponse({
-            'success': False,
-            'message': 'Invalid order data.'
-        },status=400
+        return JsonResponse(
+            {
+                'success': False,
+                'message': 'Invalid order data.'
+            },
+            status=400
         )
+
+    try:
+        media_ids = [int(media_id) for media_id in media_ids]
+    except (TypeError, ValueError):
+        return JsonResponse(
+            {
+                'success': False,
+                'message': 'Invalid media IDs.'
+            },
+            status=400
+        )
+
     media_objects = list(
-        ProductMedia.objects.filter(product=product,id__in=media_ids)
-    )
-    # مطمئن می‌شویم همه IDها متعلق به همین محصول هستند
-    if len(media_objects) != len(media_ids):
-        return JsonResponse({
-            'success': False,
-            'message': 'Invalid media IDS.'
-        },status=400
+        ProductMedia.objects.filter(
+            product=product,
+            id__in=media_ids
         )
+    )
+
+    if len(media_objects) != len(media_ids):
+        return JsonResponse(
+            {
+                'success': False,
+                'message': 'Invalid media IDs.'
+            },
+            status=400
+        )
+
+    media_map = {
+        media.id: media
+        for media in media_objects
+    }
+
     with transaction.atomic():
-        for index,media_id in enumerate(media_ids):
+
+        for index, media_id in enumerate(media_ids):
             media = media_map[media_id]
             media.sort_order = index
 
-        ProductMedia.objects.bulk_create(media_objects,['sort_order'])
-        return JsonResponse({
+        ProductMedia.objects.bulk_update(
+            media_objects,
+            ['sort_order']
+        )
+
+    return JsonResponse(
+        {
             'success': True,
-            'message': 'Order updated successfully.',
-        })
+            'message': 'Order updated successfully.'
+        }
+    )
 
 
 # =========================================================

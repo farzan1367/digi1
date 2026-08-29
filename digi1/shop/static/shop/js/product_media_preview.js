@@ -446,75 +446,31 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function deleteMedia(row, mediaId) {
 
-        const productId = getProductId();
+    const deleteInput = row.querySelector(
+        'input[name$="-DELETE"]'
+    );
 
-        if (!productId || !mediaId) {
-            return;
-        }
-
-
-        const confirmed = confirm(
-            'آیا مطمئن هستید که می‌خواهید این مدیا حذف شود؟'
+    if (!deleteInput) {
+        console.error(
+            'Django DELETE input not found.'
         );
-
-        if (!confirmed) {
-            return;
-        }
-
-
-        fetch(
-            `/product/${productId}/delete_media/${mediaId}/`,
-            {
-                method: 'POST',
-
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken')
-                }
-            }
-        )
-
-        .then(function (response) {
-
-            if (!response.ok) {
-
-                throw new Error(
-                    `HTTP error: ${response.status}`
-                );
-            }
-
-            return response.json();
-        })
-
-        .then(function (data) {
-
-            if (!data.success) {
-
-                throw new Error(
-                    data.message ||
-                    'خطا در حذف مدیا'
-                );
-            }
-
-
-            row.remove();
-
-
-            // بعد از حذف، ترتیب باقی‌مانده‌ها را ذخیره کن
-            saveMediaOrder();
-        })
-
-        .catch(function (error) {
-
-            console.error(
-                'Delete error:',
-                error
-            );
-
-            alert(
-                'حذف مدیا انجام نشد.'
-            );
-        });
+        return;
     }
+
+    const confirmed = confirm(
+        'آیا مطمئن هستید که می‌خواهید این مدیا حذف شود؟'
+    );
+
+    if (!confirmed) {
+        return;
+    }
+
+    // به Django Admin می‌گوییم این Inline باید حذف شود
+    deleteInput.checked = true;
+
+    // ردیف را فقط از ظاهر صفحه مخفی می‌کنیم
+    row.style.display = 'none';
+}
 
 
     // =====================================================

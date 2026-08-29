@@ -1,37 +1,68 @@
+```html
 {% extends "admin/change_form.html" %}
 
 {% block after_related_objects %}
 
     {{ block.super }}
 
-    <div style="margin-top: 30px;">
-        <h2>افزودن گروهی مدیا</h2>
+    <div class="bulk-media-upload">
+
+        <div class="bulk-media-header">
+            <h2>افزودن گروهی مدیا</h2>
+            <p>تصاویر و ویدیوهای محصول را به‌صورت همزمان انتخاب و آپلود کنید.</p>
+        </div>
+
+        <label
+            for="product-media-upload"
+            class="media-upload-dropzone"
+            id="media-upload-dropzone"
+        >
+            <div class="upload-icon">
+                ↑
+            </div>
+
+            <div class="upload-title">
+                انتخاب تصاویر و ویدیوها
+            </div>
+
+            <div class="upload-description">
+                برای انتخاب فایل کلیک کنید یا فایل‌ها را اینجا بکشید
+            </div>
+
+            <div class="upload-formats">
+                فرمت‌های مجاز: تصاویر و ویدیوها
+            </div>
+        </label>
 
         <input
             type="file"
             id="product-media-upload"
             multiple
             accept="image/*,video/*"
+            hidden
         >
 
         <div
+            id="product-media-count"
+            class="media-upload-count"
+            style="display: none;"
+        ></div>
+
+        <div
             id="product-media-preview"
-            style="
-                display: flex;
-                flex-wrap: wrap;
-                gap: 15px;
-                margin-top: 20px;
-            "
-        >
-        </div>
+            class="product-media-preview"
+        ></div>
 
         <button
             type="button"
             id="upload-product-media"
-            style="margin-top: 20px;"
+            class="media-upload-button"
         >
-            آپلود
+            <span class="upload-button-icon">↑</span>
+            آپلود فایل‌ها
         </button>
+
     </div>
 
 {% endblock %}
+```

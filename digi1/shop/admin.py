@@ -1,9 +1,8 @@
 from django.contrib import admin
 from django.utils.html import format_html
-
-from . import models
 from django.contrib.auth.models import User
 
+from . import models
 from .models import Category, Brand, Product,ProductMedia
 
 admin.site.register(models.Category)
@@ -34,6 +33,7 @@ class BrandAdmin(admin.ModelAdmin):
 class ProductMediaInline(admin.TabularInline):
     model = ProductMedia
     extra = 0
+    can_delete = True
 
     ordering = ['sort_order']
 
@@ -50,6 +50,9 @@ class ProductMediaInline(admin.TabularInline):
 
     class Media:
         js = ('shop/js/product_media_preview.js',)
+        css = {
+            'all': ('shop/css/product_media_admin.css',)
+        }
 
     def media_preview(self, obj):
         if not obj.file:
@@ -79,16 +82,26 @@ class ProductMediaInline(admin.TabularInline):
             return ''
 
         return format_html(
-            '<button type="button" '
-            'class="media-drag-handle" '
-            'title="برای جابه‌جایی بکشید">'
-            '☷ جابه‌جایی'
-            '</button>'
-            '<button type="button" '
-            'class="media-delete-button" '
-            'data-media-id="{}">'
-            'حذف'
-            '</button>',
+            '''
+            <div class="media-actions">
+
+                <button type="button"
+                        class="media-drag-handle"
+                        title="برای جابه‌جایی بکشید">
+                    <span class="drag-icon">☷</span>
+                    جابه‌جایی
+                </button>
+
+                <button type="button"
+                        class="media-delete-button"
+                        data-media-id="{}"
+                        title="حذف این فایل">
+                    <span class="delete-icon">🗑</span>
+                    حذف
+                </button>
+
+            </div>
+            ''',
             obj.pk
         )
 
