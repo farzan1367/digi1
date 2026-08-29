@@ -25,5 +25,12 @@ urlpatterns = [
         views.upload_product_media,
         name="upload_product_media"
     ),
+    path(
+        'product/<int:product_id>/delete_media/<int:media_id>/',
+        views.delete_product_media,
+        name='delete_product_media'
+    ),
+
+    path('product/<int:product_id>/reorder_media/',views.reorder_product_media,name='reorder_product_media'),
    
 ]

@@ -33,10 +33,20 @@ class BrandAdmin(admin.ModelAdmin):
 
 class ProductMediaInline(admin.TabularInline):
     model = ProductMedia
-    list_display = ['file']
     extra = 0
 
-    readonly_fields = ['media_preview']
+    ordering = ['sort_order']
+
+    readonly_fields = [
+        'media_preview',
+        'media_actions',
+    ]
+
+    fields = [
+        'media_preview',
+        'file',
+        'media_actions',
+    ]
 
     class Media:
         js = ('shop/js/product_media_preview.js',)
@@ -44,31 +54,51 @@ class ProductMediaInline(admin.TabularInline):
     def media_preview(self, obj):
         if not obj.file:
             return ''
-        elif obj.media_type=='image':
+
+        elif obj.media_type == 'image':
             return format_html(
-                '<img src="{url}" width="100" height="100" style="object-fit:cover;"/>',
-                url = obj.file.url
+                '<img src="{url}" width="100" height="100" '
+                'style="object-fit:cover;"/>',
+                url=obj.file.url
             )
-        elif obj.media_type=='video':
+
+        elif obj.media_type == 'video':
             return format_html(
-                '<video  width="100" height="100" controls>'
+                '<video width="100" height="100" controls>'
                 '<source src="{url}">'
                 '</video>',
-                url = obj.file.url
-
+                url=obj.file.url
             )
+
         return ''
 
     media_preview.short_description = 'Preview'
 
+    def media_actions(self, obj):
+        if not obj.pk:
+            return ''
+
+        return format_html(
+            '<button type="button" '
+            'class="media-drag-handle" '
+            'title="برای جابه‌جایی بکشید">'
+            '☷ جابه‌جایی'
+            '</button>'
+            '<button type="button" '
+            'class="media-delete-button" '
+            'data-media-id="{}">'
+            'حذف'
+            '</button>',
+            obj.pk
+        )
+
+    media_actions.short_description = 'Actions'
 
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['name','brand','category','price','is_sale']
-    list_filter = ['brand','category','is_sale']
+    list_display = ['name', 'brand', 'category', 'price', 'is_sale']
+    list_filter = ['brand', 'category', 'is_sale']
     search_fields = ['name']
     inlines = [ProductMediaInline]
     change_form_template = 'admin/shop/product/change_form.html'
-
-

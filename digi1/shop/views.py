@@ -1,7 +1,6 @@
 from importlib.metadata import requires
 from django.http import JsonResponse
 from django.shortcuts import render,redirect,get_object_or_404
-from .models import Product,Category,Profile,ProductMedia
 from django.contrib.auth import authenticate,login,logout
 from django.contrib import messages
 from django import forms
@@ -9,16 +8,30 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from django.views.generic.list import ListView
 from  django.views.generic.detail import DetailView
+from django.db.models import Q
+from django.views.decorators.http import require_POST
 from .forms import SignUpForm ,UpdateUserForm,UpdatePasswordForm,UpdateUserInfo
 from cart.cart import Cart
-from django.db.models import Q
-import json
 from payment.forms import ShippingForm
 from payment.models import ShippingAddress,Order,OrderItem
-from django.views.decorators.http import require_POST
+from .models import Product,Category,Profile,ProductMedia
+
+import json
+
+# =========================================================
+# Upload Product Media
+# =========================================================
 
 @require_POST
 def upload_product_media(request, product_id):
+    if not request.user.is_staff:
+        return JsonResponse(
+            {
+                "success": False,
+                "message": "Permission Denied."
+            },
+            status=403
+        )
     product = get_object_or_404(Product, id=product_id)
 
     files = request.FILES.getlist('files')
@@ -66,13 +79,95 @@ def upload_product_media(request, product_id):
         'success': True,
         'count': len(media_objects),
     })
-    ProductMedia.objects.bulk_create(media)
 
-    return  JsonResponse({
+# =========================================================
+# Delete Product Media
+# =========================================================
+
+@require_POST
+def delete_product_media(request, product_id,media_id):
+    if not request.user.is_staff:
+        return JsonResponse(
+            {
+                'success': False,
+                'message': 'Permission Denied.'
+            },
+            status=403
+        )
+    product = get_object_or_404(Product, id=product_id)
+    media = get_object_or_404(ProductMedia, id=media_id,product=product)
+
+    if media.file:
+        media.file.delete(save=False)
+    media.delete()
+
+    # مرتب‌سازی مجدد sort_order
+    remaining_media = ProductMedia.objects.filter(product=product).order_by('sort_order','id')
+    for index,item  in enumerate(remaining_media):
+        if item.sort_order != index:
+            item.sort_order = index
+            item.save(update_fields=['sort_order'])
+    return JsonResponse({
         'success': True,
-        'count': len(media)
+        'count': 'Media deleted.',
     })
 
+# =========================================================
+# Reorder Product Media
+# =========================================================
+
+@require_POST
+def reorder_product_media(request, product_id):
+    if not request.user.is_staff:
+        return JsonResponse(
+            {
+                'success': False,
+                'message': 'Permission Denied.'
+            },
+            status=403
+        )
+    product = get_object_or_404(Product, id=product_id)
+
+    try:
+        data = json.loads(request.body)
+        media_ids = data.get('order',[])
+    except(Json.JSONDecodeError, KeyError):
+        return JsonResponse({
+            'success': False,
+            'message': 'Invalid JSON.'
+        },status=400
+        )
+    if not isinstance(media_ids, list):
+        return JsonResponse({
+            'success': False,
+            'message': 'Invalid order data.'
+        },status=400
+        )
+    media_objects = list(
+        ProductMedia.objects.filter(product=product,id__in=media_ids)
+    )
+    # مطمئن می‌شویم همه IDها متعلق به همین محصول هستند
+    if len(media_objects) != len(media_ids):
+        return JsonResponse({
+            'success': False,
+            'message': 'Invalid media IDS.'
+        },status=400
+        )
+    with transaction.atomic():
+        for index,media_id in enumerate(media_ids):
+            media = media_map[media_id]
+            media.sort_order = index
+
+        ProductMedia.objects.bulk_create(media_objects,['sort_order'])
+        return JsonResponse({
+            'success': True,
+            'message': 'Order updated successfully.',
+        })
+
+
+# =========================================================
+# Product List
+# =========================================================
 class ProductListView(ListView): #def helloworld
     model = Product
     context_object_name = 'products'
@@ -83,6 +178,9 @@ class ProductListView(ListView): #def helloworld
 #     all_products=Product.objects.all()
 #     return render(request,"index.html",{"products":all_products})
 
+# =========================================================
+# Product Detail
+# =========================================================
 class ProductDetailView(DetailView): #def product
     model = Product
     context_object_name = 'product'
@@ -92,6 +190,9 @@ class ProductDetailView(DetailView): #def product
 #     product=Product.objects.get(id=pk)
 #     return render(request,"product.html",{"product":product})
 
+# =========================================================
+# Category List
+# =========================================================
 class CategoryListView(ListView):
     model = Category
     context_object_name = 'category'
@@ -101,6 +202,9 @@ class CategoryListView(ListView):
 #     all_cat=Category.objects.all()
 #     return render(request,"category_summary.html",{'category':all_cat})
 
+# =========================================================
+# Category Detail
+# =========================================================
 class CategoryDetailView(DetailView):
     model = Category
     context_object_name = 'category'
@@ -131,6 +235,10 @@ class CategoryDetailView(DetailView):
 #         messages.success(request,("دسته بندی مورد نظر وجود ندارد"))
 #         return redirect ("home")
 
+
+# =========================================================
+# Order Details
+# =========================================================
 def order_details(request,pk):
     if request.user.is_authenticated:
         order = Order.objects.get(id=pk)
