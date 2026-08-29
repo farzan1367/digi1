@@ -1,5 +1,7 @@
+from importlib.metadata import requires
+from django.http import JsonResponse
 from django.shortcuts import render,redirect,get_object_or_404
-from .models import Product,Category,Profile
+from .models import Product,Category,Profile,ProductMedia
 from django.contrib.auth import authenticate,login,logout
 from django.contrib import messages
 from django import forms
@@ -13,6 +15,63 @@ from django.db.models import Q
 import json
 from payment.forms import ShippingForm
 from payment.models import ShippingAddress,Order,OrderItem
+from django.views.decorators.http import require_POST
+
+@require_POST
+def upload_product_media(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+
+    files = request.FILES.getlist('files')
+
+    if not files:
+        return JsonResponse({
+            'success': False,
+            'message': 'No files selected.'
+        }, status=400)
+
+    last_media = (
+        ProductMedia.objects
+        .filter(product=product)
+        .order_by('-sort_order')
+        .first()
+    )
+
+    next_order = last_media.sort_order + 1 if last_media else 0
+
+    media_objects = []
+
+    for index, file in enumerate(files):
+
+        if file.content_type.startswith('image/'):
+            media_type = 'image'
+
+        elif file.content_type.startswith('video/'):
+            media_type = 'video'
+
+        else:
+            continue
+
+        media_objects.append(
+            ProductMedia(
+                product=product,
+                file=file,
+                media_type=media_type,
+                sort_order=next_order + index,
+            )
+        )
+
+    ProductMedia.objects.bulk_create(media_objects)
+
+    return JsonResponse({
+        'success': True,
+        'count': len(media_objects),
+    })
+    ProductMedia.objects.bulk_create(media)
+
+    return  JsonResponse({
+        'success': True,
+        'count': len(media)
+    })
 
 class ProductListView(ListView): #def helloworld
     model = Product

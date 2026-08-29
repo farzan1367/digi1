@@ -69,5 +69,6 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = ['brand','category','is_sale']
     search_fields = ['name']
     inlines = [ProductMediaInline]
+    change_form_template = 'admin/shop/product/change_form.html'
 
 

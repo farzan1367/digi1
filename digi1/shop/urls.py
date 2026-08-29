@@ -20,5 +20,10 @@ urlpatterns = [
     path('search/',views.search, name="search"),
     path('orders/',views.user_orders, name="orders"),
     path('order_details/<int:pk>',views.order_details, name="order_details"),
+    path(
+        'product/<int:product_id>/upload_media/',
+        views.upload_product_media,
+        name="upload_product_media"
+    ),
    
 ]
