@@ -3,15 +3,24 @@ from django.utils.html import format_html
 from django.contrib.auth.models import User
 
 from . import models
-from .models import Category, Brand, Product,ProductMedia
+from .models import Category, Brand, Product,ProductMedia,Inventory
 
 admin.site.register(models.Category)
 # admin.site.register(models.Product)
 # admin.site.register(models.Brand)
-admin.site.register(models.Customer)
-admin.site.register(models.Order)
+# admin.site.register(models.Customer)
+# admin.site.register(models.Order)
 admin.site.register(models.Profile)
 
+@admin.register(Inventory)
+class InventoryAdmin(admin.ModelAdmin):
+    list_display = ['product','quantity','reserved_quantity','available_quantity','low_stock_threshold','updated_at',]
+
+    list_filter = ['quantity']
+
+    search_fields = ['product__name']
+
+    readonly_fields = ['available_quantity', 'updated_at']
 
 class ProfileInLine(admin.StackedInline):
     model = models.Profile
@@ -107,11 +116,15 @@ class ProductMediaInline(admin.TabularInline):
 
     media_actions.short_description = 'Actions'
 
+class InventoryInline(admin.StackedInline):
+    model = Inventory
+    extra = 0
+    readonly_fields = ['available_quantity', 'updated_at']
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = ['name', 'brand', 'category', 'price', 'is_sale']
     list_filter = ['brand', 'category', 'is_sale']
     search_fields = ['name']
-    inlines = [ProductMediaInline]
+    inlines = [ProductMediaInline, InventoryInline]
     change_form_template = 'admin/shop/product/change_form.html'

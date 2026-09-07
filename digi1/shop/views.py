@@ -1,20 +1,20 @@
-from importlib.metadata import requires
+# from importlib.metadata import requires
 from django.http import JsonResponse
 from django.shortcuts import render,redirect,get_object_or_404
 from django.contrib.auth import authenticate,login,logout
 from django.contrib import messages
-from django import forms
+# from django import forms
 from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserCreationForm
+# from django.contrib.auth.forms import UserCreationForm
 from django.views.generic.list import ListView
 from  django.views.generic.detail import DetailView
 from django.db.models import Q
 from django.views.decorators.http import require_POST
 from django.db import transaction
 from .forms import SignUpForm ,UpdateUserForm,UpdatePasswordForm,UpdateUserInfo
-from cart.cart import Cart
-from payment.forms import ShippingForm
-from payment.models import ShippingAddress,Order,OrderItem
+# from cart.cart import Cart
+# from payment.forms import ShippingForm
+# from payment.models import ShippingAddress,Order,OrderItem
 from .models import Product,Category,Profile,ProductMedia
 
 import json
@@ -227,6 +227,13 @@ class ProductDetailView(DetailView): #def product
     model = Product
     context_object_name = 'product'
     template_name = 'product.html'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        media_list = (self.object.media.all()).order_by('sort_order','id')
+        context['media_list'] = media_list
+        context['featured_media'] = self.object.media.filter(media_type='image').order_by('sort_order','id').first()
+        return context
+
 
 # def product(request,pk):
 #     product=Product.objects.get(id=pk)
@@ -367,10 +374,10 @@ def login_user(request):
                     cart.db_add(product=key,quantity=value)
                     
 
-            messages.success(request,("با موفقیت وارد شدید"))
+            messages.success(request,"با موفقیت وارد شدید")
             return redirect ("home")
         else:
-            messages.success(request,(" مشکلی در وارد شدن وجود داشت"))
+            messages.success(request," مشکلی در وارد شدن وجود داشت")
             return redirect ("login")
 
     else:    
@@ -379,7 +386,7 @@ def login_user(request):
 
 def logout_user(request):
     logout(request)
-    messages.success(request,("با موفقیت خارج شدید"))
+    messages.success(request,"با موفقیت خارج شدید")
     return redirect("home")
 
 def signup_user(request):
@@ -392,12 +399,12 @@ def signup_user(request):
             password1 = form.cleaned_data['password1']
             user=authenticate(request,username=username,password=password1)
             login(request,user)
-            messages.success(request,("ثبت نام شما با موفقیت انجام شد"))
+            messages.success(request,"ثبت نام شما با موفقیت انجام شد")
             return redirect ("update_info")
         else:
             for err in list(form.errors.values()):
-                messages.error(request,err)
-            messages.success(request,(" مشکلی در ثبت نام وجود دارد"))
+                messages.error(request,str(err))
+            messages.success(request," مشکلی در ثبت نام وجود دارد")
             return redirect ("signup")   
     else:
         return render(request,"signup.html",{'form':form})
@@ -430,7 +437,7 @@ def update_password(request):
                 return redirect('update_user') 
             else:
                 for err in list(form.errors.values()):
-                    messages.error(request,err)
+                    messages.error(request,str(err))
                 return redirect('update_password')    
         else:
             form = UpdatePasswordForm(current_user)            

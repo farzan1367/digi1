@@ -1,5 +1,5 @@
 
-from django.urls import path,include
+from django.urls import path
 from . import views
 from .views import ProductListView,ProductDetailView,CategoryListView,CategoryDetailView
 
@@ -20,17 +20,8 @@ urlpatterns = [
     path('search/',views.search, name="search"),
     path('orders/',views.user_orders, name="orders"),
     path('order_details/<int:pk>',views.order_details, name="order_details"),
-    path(
-        'product/<int:product_id>/upload_media/',
-        views.upload_product_media,
-        name="upload_product_media"
-    ),
-    path(
-        'product/<int:product_id>/delete_media/<int:media_id>/',
-        views.delete_product_media,
-        name='delete_product_media'
-    ),
-
+    path('product/<int:product_id>/upload_media/',views.upload_product_media,name="upload_product_media"),
+    path('product/<int:product_id>/delete_media/<int:media_id>/',views.delete_product_media,name='delete_product_media'),
     path('product/<int:product_id>/reorder_media/',views.reorder_product_media,name='reorder_product_media'),
    
 ]

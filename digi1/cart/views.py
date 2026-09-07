@@ -37,7 +37,8 @@ def cart_delete(request):
         
         cart.delete(product=product_id)
 
-        response=JsonResponse({'product':product_id})
+        response=JsonResponse({'product':product_id,
+                               'total':cart.get_total(),})
         messages.success(request,("محصول حذف شد"))
         return response
 
@@ -50,6 +51,7 @@ def cart_update(request):
         
         cart.update(product=product_id,quantity = product_qty)
 
-        response=JsonResponse({'qty':product_qty})
-        messages.success(request,("محصول ویرایش شد"))
+        response=JsonResponse({'qty':product_qty,
+                               'total':cart.get_total(),})
+        # messages.success(request,("محصول ویرایش شد"))
         return response

@@ -6,8 +6,32 @@
     <div class="container">
        <div class="card mb-3" >
             <div class="row g-0">
-                <div class="col-md-4">
-                <img src="{{ product.picture.url }}" class="img-fluid rounded-start" alt="...">
+                <!-- gallery-->
+                <div class="col-md-5">
+                    <!--Main Media-->
+                    <div id="main-media" style="width:100%;height:400px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                    {% if featured_media %}
+                        {% if featured_media.media_type == 'image' %}
+                            <img src="{{ featured_media.file.url }}" class="img-fluid"  style="width:100%%; height:100%; object-fit:contain; " alt="{{ product.name}}">
+                        {% endif %}
+                    {% else %}
+                        <img src="{{ product.picture.url }}" class="img-fluid "  style="width:100%%; height:100%; object-fit:contain; " alt="{{ product.name}}">
+                    {% endif %}
+                    </div>
+                    <!--Thumbnail-->
+                    {% if media_list %}
+                        <div id="media-thumbnail" style="display:flex; gap: 10px; flex-wrap:wrap; margin-top:15px;">
+                            {% for media in media_list %}
+                                <div class="media-thumbnail" data-url="{{ media.file.url }}" data-type="{{ media.media_type }}" style="width:80px;height:80px;cursor:pointer; border:1px solid #add; border-radius:6px; overflow:hidden; display:flex; align-items:center; justify-content:center;">
+                                    {% if media.media_type == 'image' %}
+                                        <img src="{{ media.file.url }}"  style="width:100%%; height:100%; object-fit:cover; " alt="{{ product.name}}">
+                                    {% elif media.media_type == 'video' %}
+                                        <video src="{{ media.file.url }}" muted style="width:100%; height:100%; object-fit:cover;"></video>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
                 <div class="col-md-8">
                 <div class="card-body">
@@ -37,6 +61,23 @@
     </div>
     <br><br><br><br><br><br>
     <script>
+    $(document).on('click','.media-thumbnail',function(){
+        const url = $(this).data('url');
+        const type = $(this).data('type');
+        const mainMedia = $('#main-media');
+        mainMedia.empty();
+        if(type === 'image'){
+            mainMedia.html(`
+                <img src="${url}" alt="{{ product.name }}" class="img-fluid" style=" width:100%;height:100%; object-fit:contain;">
+                `);
+            }
+        else if (type === 'video'){
+            mainMedia.html(`
+                <video src="${url}" controls autoplay style="width:100%; height:100%; object-fit:contain;"></video>
+                `);
+            }
+    });
+
     $(document).on('click','#add-cart',function(e){
         e.preventDefault();
         $.ajax({
