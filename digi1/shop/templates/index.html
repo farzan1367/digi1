@@ -1,83 +1,499 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load shop_tags%}
-<!--{% load humanize %}-->
+{% load shop_tags %}
+
 {% block content %}
-  <!-- Header-->
-        <header class="bg-dark py-5">
-            <div class="container px-4 px-lg-5 my-5">
-                <div class="text-center text-white">
-                    <h1 class="display-4 fw-bolder">فروشگاه من</h1>
-                    <p class="lead fw-normal text-white-50 mb-0">به فروشگاه من خوش آمدید</p>
-                </div>
-            </div>
-        </header>
-        <!-- Section-->
-        <section class="py-5">
-            <div class="container px-4 px-lg-5 mt-5">
-                <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
-                {% for item in products %}
-                    <div class="col mb-5">
-                        <div class="card h-100">
-                        {% if item.is_sale %}
-                            <div class="badge bg-dark text-white position-absolute" style="top: 0.5rem; right: 0.5rem">تخفیف ویژه</div>
-                            <!-- Product image-->
-                            <img class="card-img-top" src="{{ item.picture.url }}" alt="..." />
-                            <!-- Product details-->
-                            <div class="card-body p-4">
-                                <div class="text-center">
-                                    <!-- Product name-->
-                                    <h5 class="fw-bolder">{{ item.name }}</h5>
-                                    <!-- Product price-->
-                                    <div class="d-flex justify-content-center small text-warning mb-2">
-                                    {% with ''|center:item.star as range %}
-                                    {% for _ in range %}
-                                    
-                                        <div class="bi-star-fill"></div>
-                                    
-                                    {% endfor %}
-                                    {% endwith %}
-                                    </div>
-                                    <strike>{{ item.price |price_format}}</strike>تومان<br>
-                                    {{ item.sale_price |price_format }} تومان
-                                </div>
-                            </div>
-                            <!-- Product actions-->
-                            <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
-                                <div class="text-center"><a class="btn btn-outline-dark mt-auto" href="{% url 'product' item.id %}">صفحه محصول </a></div>
-                            </div>
-                        {% else %}
-                            <!-- Product image-->
-                            <img class="card-img-top" src="{{ item.picture.url }}" alt="..." />
-                            <!-- Product details-->
-                            <div class="card-body p-4">
-                                <div class="text-center">
-                                    <!-- Product name-->
-                                    <h5 class="fw-bolder">{{ item.name }}</h5>
-                                    <!-- Product price-->
-                                    <div class="d-flex justify-content-center small text-warning mb-2">
-                                    {% with ''|center:item.star as range %}
-                                    {% for _ in range %}
-                                    
-                                        <div class="bi-star-fill"></div>
-                                    
-                                    {% endfor %}
-                                    {% endwith %}
-                                    </div>
-                                    
-                                    {{ item.price |price_format }} تومان
-                                </div>
-                            </div>
-                            <!-- Product actions-->
-                            <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
-                                <div class="text-center"><a class="btn btn-outline-dark mt-auto" href="{% url 'product' item.id %}">صفحه محصول </a></div>
-                            </div> 
-                        {% endif %}       
+
+<div class="container py-5" xmlns="http://www.w3.org/1999/html">
+
+    <!-- عنوان -->
+    <div class="text-center mb-4">
+        <h1 class="fw-bold">محصولات فروشگاه</h1>
+        <p class="text-muted">محصول مورد نظر خود را پیدا کنید</p>
+    </div>
+
+    <!-- جستجو -->
+    <form method="get" class="mb-4">
+        <div class="input-group">
+            <input
+                type="text"
+                name="q"
+                class="form-control"
+                placeholder="جستجوی محصول..."
+                value="{{ request.GET.q|default:'' }}"
+            >
+            <button class="btn btn-dark" type="submit">
+                جستجو
+            </button>
+        </div>
+    </form>
+
+
+    <div class="row">
+        <button class="btn btn-dark w-100 d-lg-none mb-3" type="button" data-bs-toggle="collapse" data-bs-target="#filters" aria-expanded="false" aria-controls="filters">
+            فیلتر
+        </button>
+
+        <!-- فیلترها -->
+        <div class="col-lg-3 mb-4">
+            <div class="collapse d-lg-block" id="filters">
+
+            <div class="card">
+                <div class="card-body">
+
+                    <h5 class="fw-bold mb-3">فیلتر محصولات</h5>
+
+                    <form method="get">
+
+                        <!-- حفظ جستجو -->
+                        <input
+                            type="hidden"
+                            name="q"
+                            value="{{ request.GET.q|default:'' }}"
+                        >
+
+                        <!-- دسته بندی -->
+                        <label class="fw-bold mb-2">
+                            دسته بندی
+                        </label>
+
+                        <select name="category" class="form-select mb-3">
+
+                            <option value="">همه دسته‌ها</option>
+
+                            {% for category in categories %}
+                                <option
+                                    value="{{ category.id }}"
+                                    {% if request.GET.category == category.id|stringformat:"s" %}
+                                        selected
+                                    {% endif %}
+                                >
+                                    {{ category.name }}
+                                </option>
+                            {% endfor %}
+
+                        </select>
+
+
+                        <!-- برند -->
+                        <label class="fw-bold mb-2">
+                            برند
+                        </label>
+
+                        <select name="brand" class="form-select mb-3">
+
+                            <option value="">همه برندها</option>
+
+                            {% for brand in brands %}
+                                <option
+                                    value="{{ brand.id }}"
+                                    {% if request.GET.brand == brand.id|stringformat:"s" %}
+                                        selected
+                                    {% endif %}
+                                >
+                                    {{ brand.name }}
+                                </option>
+                            {% endfor %}
+
+                        </select>
+
+
+                        <!-- قیمت -->
+                        <label class="fw-bold mb-2">
+                            محدوده قیمت
+                        </label>
+
+                        <input
+                            type="number"
+                            name="min_price"
+                            class="form-control mb-2"
+                            placeholder="حداقل قیمت"
+                            value="{{ request.GET.min_price|default:'' }}"
+                        >
+
+                        <input
+                            type="number"
+                            name="max_price"
+                            class="form-control mb-3"
+                            placeholder="حداکثر قیمت"
+                            value="{{ request.GET.max_price|default:'' }}"
+                        >
+
+
+                        <!-- امتیاز -->
+                        <label class="fw-bold mb-2">
+                            حداقل امتیاز
+                        </label>
+
+                        <select name="rating" class="form-select mb-3">
+
+                            <option value="">همه</option>
+
+                            <option value="5"
+                                {% if request.GET.rating == "5" %}selected{% endif %}>
+                                ⭐ ۵ به بالا
+                            </option>
+
+                            <option value="4"
+                                {% if request.GET.rating == "4" %}selected{% endif %}>
+                                ⭐ ۴ به بالا
+                            </option>
+
+                            <option value="3"
+                                {% if request.GET.rating == "3" %}selected{% endif %}>
+                                ⭐ ۳ به بالا
+                            </option>
+
+                        </select>
+
+
+                        <!-- موجود -->
+                        <div class="form-check mb-2">
+
+                            <input
+                                class="form-check-input"
+                                type="checkbox"
+                                name="in_stock"
+                                value="1"
+                                id="in_stock"
+                                {% if request.GET.in_stock == "1" %}
+                                    checked
+                                {% endif %}
+                            >
+
+                            <label
+                                class="form-check-label"
+                                for="in_stock"
+                            >
+                                فقط کالاهای موجود
+                            </label>
+
                         </div>
-                    </div>
-                {% endfor %}
+
+
+                        <!-- تخفیف -->
+                        <div class="form-check mb-3">
+
+                            <input
+                                class="form-check-input"
+                                type="checkbox"
+                                name="sale"
+                                value="1"
+                                id="sale"
+                                {% if request.GET.sale == "1" %}
+                                    checked
+                                {% endif %}
+                            >
+
+                            <label
+                                class="form-check-label"
+                                for="sale"
+                            >
+                                فقط کالاهای تخفیف‌دار
+                            </label>
+
+                        </div>
+
+
+                        <button class="btn btn-dark w-100">
+                            اعمال فیلتر
+                        </button>
+
+                    </form>
 
                 </div>
             </div>
-        </section>
-{% endblock %}       
+            </div>
+        </div>
+
+
+        <!-- محصولات -->
+        <div class="col-lg-9">
+
+            <!-- مرتب سازی -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+                <span class="text-muted">
+                    {{ page_obj.paginator.count }} محصول
+                </span>
+
+                <form method="get">
+
+                    {% for key,value in request.GET.items %}
+                        {% if key != 'sort' and key != 'page' %}
+                            <input
+                                type="hidden"
+                                name="{{ key }}"
+                                value="{{ value }}"
+                            >
+                        {% endif %}
+                    {% endfor %}
+
+                    <select
+                        name="sort"
+                        class="form-select"
+                        onchange="this.form.submit()"
+                    >
+
+                        <option value="newest"
+                            {% if request.GET.sort == "newest" or not request.GET.sort %}
+                                selected
+                            {% endif %}
+                        >
+                            جدیدترین
+                        </option>
+
+                        <option value="cheap"
+                            {% if request.GET.sort == "cheap" %}
+                                selected
+                            {% endif %}
+                        >
+                            ارزان‌ترین
+                        </option>
+
+                        <option value="expensive"
+                            {% if request.GET.sort == "expensive" %}
+                                selected
+                            {% endif %}
+                        >
+                            گران‌ترین
+                        </option>
+
+                        <option value="rating"
+                            {% if request.GET.sort == "rating" %}
+                                selected
+                            {% endif %}
+                        >
+                            بالاترین امتیاز
+                        </option>
+
+                    </select>
+
+                </form>
+
+            </div>
+
+
+            <!-- کارت محصولات -->
+            <div class="row g-4">
+
+                {% for item in products %}
+
+                <div class="col-12 col-sm-6 col-xl-4">
+
+                    <div class="card h-100 shadow-sm position-relative">
+
+                        <!-- تخفیف -->
+                        {% if item.is_sale and item.sale_price < item.price %}
+                            <span class="badge bg-danger position-absolute top-0 end-0 m-2">
+                                تخفیف
+                            </span>
+                        {% endif %}
+
+
+                        <!-- تصویر -->
+                        <a href="{% url 'product' item.id %}">
+
+                            <img
+                                src="{{ item.picture.url }}"
+                                class="card-img-top"
+                                style="height:230px; object-fit:contain;"
+                                alt="{{ item.name }}"
+                            >
+
+                        </a>
+
+
+                        <div class="card-body">
+
+                            <!-- برند -->
+                            {% if item.brand %}
+                                <small class="text-muted">
+                                    {{ item.brand.name }}
+                                </small>
+                            {% endif %}
+
+
+                            <!-- نام -->
+                            <h5 class="fw-bold mt-2">
+                                {{ item.name }}
+                            </h5>
+
+
+                            <!-- امتیاز -->
+                            <div class="text-warning mb-2">
+
+                                {% for i in "12345" %}
+
+                                    {% if forloop.counter <= item.star %}
+                                        ★
+                                    {% else %}
+                                        ☆
+                                    {% endif %}
+
+                                {% endfor %}
+
+                                <small class="text-muted">
+                                    ({{ item.star }})
+                                </small>
+
+                            </div>
+
+
+                            <!-- موجودی و قیمت -->
+                            {% if item.inventory.available_quantity <= 0 %}
+
+                                <div class="text-danger fw-bold">
+                                    ناموجود
+                                </div>
+
+                            {% else %}
+
+                                {% if item.inventory.available_quantity <= item.inventory.low_stock_threshold %}
+
+                                    <div class="text-warning fw-bold mb-2">
+                                        فقط {{ item.inventory.available_quantity }} عدد باقی مانده
+                                    </div>
+
+                                {% endif %}
+
+
+                                {% if item.is_sale and item.sale_price < item.price %}
+
+                                    <div>
+                                        <del class="text-muted">
+                                            {{ item.price|price_format }}
+                                        </del>
+                                        تومان
+                                    </div>
+
+                                    <div class="text-danger fw-bold fs-5">
+                                        {{ item.sale_price|price_format }}
+                                        تومان
+                                    </div>
+
+                                {% else %}
+
+                                    <div class="fw-bold fs-5">
+                                        {{ item.price|price_format }}
+                                        تومان
+                                    </div>
+
+                                {% endif %}
+
+                            {% endif %}
+
+                        </div>
+
+
+                        <!-- دکمه -->
+                        <div class="card-footer bg-transparent border-0 p-3">
+
+                            <a
+                                href="{% url 'product' item.id %}"
+                                class="btn btn-outline-dark w-100"
+                            >
+                                مشاهده محصول
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {% empty %}
+
+                    <div class="text-center py-5">
+                        <h4>محصولی پیدا نشد</h4>
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+
+            <nav class="mt-5">
+
+                <ul class="pagination justify-content-center">
+
+                    {% if page_obj.has_previous %}
+
+                        <li class="page-item">
+
+                            <a
+                                class="page-link"
+                                href="?{% for key,value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}"
+                            >
+                                قبلی
+                            </a>
+
+                        </li>
+
+                    {% endif %}
+
+
+                    {% for num in page_obj.paginator.page_range %}
+
+                        {% if num == page_obj.number %}
+
+                            <li class="page-item active">
+                                <span class="page-link">
+                                    {{ num }}
+                                </span>
+                            </li>
+
+                        {% else %}
+
+                            <li class="page-item">
+
+                                <a
+                                    class="page-link"
+                                    href="?{% for key,value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}"
+                                >
+                                    {{ num }}
+                                </a>
+
+                            </li>
+
+                        {% endif %}
+
+                    {% endfor %}
+
+
+                    {% if page_obj.has_next %}
+
+                        <li class="page-item">
+
+                            <a
+                                class="page-link"
+                                href="?{% for key,value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}"
+                            >
+                                بعدی
+                            </a>
+
+                        </li>
+
+                    {% endif %}
+
+                </ul>
+
+            </nav>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+
+
+

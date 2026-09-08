@@ -10,12 +10,13 @@ from django.views.generic.list import ListView
 from  django.views.generic.detail import DetailView
 from django.db.models import Q
 from django.views.decorators.http import require_POST
-from django.db import transaction
+from django.db import transaction,models
 from .forms import SignUpForm ,UpdateUserForm,UpdatePasswordForm,UpdateUserInfo
 # from cart.cart import Cart
 # from payment.forms import ShippingForm
 # from payment.models import ShippingAddress,Order,OrderItem
-from .models import Product,Category,Profile,ProductMedia
+from .models import Product,Brand,Category,Profile,ProductMedia
+from decimal import Decimal
 
 import json
 
@@ -215,6 +216,66 @@ class ProductListView(ListView): #def helloworld
     context_object_name = 'products'
     paginate_by =20
     template_name = 'index.html'
+    def get_queryset(self):
+        products = (Product.objects.select_related('category','brand','inventory').filter(is_active=True))
+        #جستجو
+        q = self.request.GET.get('q','').strip()
+        if q:
+            products = products.filter(Q(name__icontains=q) | Q(description__icontains=q) | Q(sku__icontains=q) | Q(category__name__icontains=q)  | Q(brand__name__icontains=q))
+        #دسته بندی
+        category = self.request.GET.get('category')
+        if category:
+            products = products.filter(category_id=category)
+        #برند
+        brand = self.request.GET.get('brand')
+        if brand:
+            products = products.filter(brand_id=brand)
+        #حداقل قیمت
+        min_price = self.request.GET.get('min_price')
+        if min_price:
+            try:
+                products = products.filter(price__gte=Decimal(min_price))
+            except:
+                pass
+        #حداکثر قیمت
+        max_price = self.request.GET.get('max_price')
+        if max_price:
+            try:
+                products = products.filter(price__lte=Decimal(max_price))
+            except:
+                pass
+
+        #امتیاز
+        rating = self.request.GET.get('rating')
+        if rating:
+            try:
+                products = products.filter(star__gte=Decimal(rating))
+            except:
+                pass
+        #فقط موجود
+        if self.request.GET.get('in_stock') == '1':
+            products = products.filter(inventory__quantity__gt=0)
+        #فقط تخفیف دار
+        if self.request.GET.get('sale') == '1':
+            products = products.filter(is_sale=True,sale_price__lt=models.F('price'))
+        #مرتب سازی
+        sort = self.request.GET.get('sort','newest')
+        if sort=='cheap':
+            products = products.order_by('price')
+        elif sort=='expensive':
+            products = products.order_by('-price')
+        elif sort=='ratig':
+            products = products.order_by('-star','-created_at')
+        else:
+            products = products.order_by('-created_at')
+        return products
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['categories'] = Category.objects.filter(is_active=True).order_by('name')
+        context['brands'] = Brand.objects.filter(is_active=True).order_by('name')
+        context['current_filters'] = self.request.GET
+        return context
+
 
 # def helloworld(request):
 #     all_products=Product.objects.all()

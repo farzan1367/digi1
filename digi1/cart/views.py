@@ -18,10 +18,12 @@ def cart_add(request):
     if request.POST.get('action') == 'post':
         product_id=int(request.POST.get('product_id'))
         product_qty=int(request.POST.get('product_qty'))
-        product=get_object_or_404(Product,id=product_id)
-        cart.add(product=product,quantity = product_qty)
+        product = get_object_or_404(Product,id=product_id)
+        result = cart.add(product=product,quantity = product_qty)
+        if result is False:
+            return JsonResponse({'error':'موجودی کافی نیست'},status=400)
 
-        cart_quantity = cart.__len__()
+        cart_quantity = len(cart)
 
         response=JsonResponse({'qty':cart_quantity})
         messages.success(request,("محصول اضافه شد"))
@@ -46,10 +48,12 @@ def cart_update(request):
     cart=Cart(request)
 
     if request.POST.get('action') == 'post':
-        product_id=int(request.POST.get('product_id'))
-        product_qty=int(request.POST.get('product_qty'))
+        product_id = int(request.POST.get('product_id'))
+        product_qty = int(request.POST.get('product_qty'))
         
-        cart.update(product=product_id,quantity = product_qty)
+        result = cart.update(product=product_id,quantity = product_qty)
+        if result is False:
+            return JsonResponse({'error':'موجودی کافی نیست'},status=400)
 
         response=JsonResponse({'qty':product_qty,
                                'total':cart.get_total(),})

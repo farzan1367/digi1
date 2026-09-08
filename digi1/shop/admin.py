@@ -123,7 +123,7 @@ class InventoryInline(admin.StackedInline):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['name', 'brand', 'category', 'price', 'is_sale']
+    list_display = ['inventory', 'brand', 'category', 'price', 'is_sale',]
     list_filter = ['brand', 'category', 'is_sale']
     search_fields = ['name']
     inlines = [ProductMediaInline, InventoryInline]

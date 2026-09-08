@@ -26,9 +26,15 @@ class Cart:
 
     def add(self,product,quantity):
         product_id=str(product.id)
+        quantity=int(quantity)
+
+        inventory = product.inventory
+        current_quantity = int(self.cart.get(product_id,0))
+        if current_quantity+quantity > inventory.available_quantity:
+            return False
         #product_qty=str(quantity)
         if product_id in self.cart:
-            pass
+            self.cart[product_id] += quantity
         else:
             self.cart[product_id]=int(quantity)
         self.session.modified=True 
@@ -37,7 +43,7 @@ class Cart:
             current_user = Profile.objects.filter(user__id=self.request.user.id)
             db_cart = str(self.cart).replace('\'','\"')
             current_user.update(old_cart=str(db_cart)) 
-
+        return True
             
     def __len__(self):
         return len(self.cart)
@@ -69,14 +75,19 @@ class Cart:
         product_id=str(product)
         product_qty=int(quantity)
 
-        ourcart=self.cart
-        ourcart[product_id] = product_qty
+        inventory = Product.objects.get(id=product_id).inventory
+        if product_qty > inventory.available_quantity:
+            return False
+        self.cart[product_id] = product_qty
+
+        # ourcart=self.cart
+        # ourcart[product_id] = product_qty
         self.session.modified=True
         if self.request.user.is_authenticated:
             current_user = Profile.objects.filter(user__id=self.request.user.id)
             db_cart = str(self.cart).replace('\'','\"')
             current_user.update(old_cart=str(db_cart)) 
-
+        return True
         # alaki=self.cart
         # return alaki
 

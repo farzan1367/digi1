@@ -18,12 +18,12 @@
                 <div class="card mb-3 cart-item" data-product-id="{{product.id}}">
                     <div class="row g-0">
                         <div class="col-md-4">
-                        <img src="{{ product.picture.url }}" class="img-fluid rounded-start" alt="{{product.name}}">
+                        <img src="{{ product.picture.url }}" class="img-fluid rounded-start" alt="{{product.name}}" style="width:200px;height:200px;">
                         </div>
                         <div class="col-md-8">
                         <div class="card-body">
                             <h5 class="card-title">{{ product.name }}</h5>
-                            <p class="card-text">{{ product.description }}</p>
+<!--                            <p class="card-text">{{ product.description }}</p>-->
                             {% if product.is_sale %}
                             <p class="card-text">💰قیمت: <strike>{{ product.price |intcomma }}</strike> - {{ product.sale_price |intcomma  }}تومان</p>
                             <span class="unit-price" data-price="{{ product.sale_price}}" style="display:none;"></span>
@@ -100,7 +100,9 @@
             },
 
             error:function(xhr){
-                console.log(xhr.responseText);
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    alert(xhr.responseJSON.error);
+                }
             }
         });
       }
@@ -145,7 +147,7 @@
                 }
             },
             error:function(xhr){
-                console.log(xhr.responseText);
+                console.log(xhr.responseText)
             }
         });
     });

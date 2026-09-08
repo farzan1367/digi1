@@ -43,16 +43,38 @@
                     <p class="card-text">💰قیمت: {{ product.price |intcomma }}تومان</p>
                     {% endif %}
 
-                    تعداد:
-                    <select class="form-select" id="cart-qty">
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                    </select>
+                    {% if product.inventory.available_quantity <= 0 %}
+                        <span class="text-danger fw-bold">ناموجود</span>
+                        <button class="btn btn-secondary" disabled>نا موجود</button>
+                    {% else %}
+                        <p class="text-success fw-bold">
+                            موجودی: {{item.inventory.available_quantity }}
+                        </p>
+                        تعداد:
+                        <select class="form-select" id="cart-qty">
+                            {% for i in "123456789" %}
+                                {% if forloop.counter <= product.inventory.available_quantity %}
+                                    <option value="{{forloop.counter}}">{{forloop.counter}}</option>
+                                {%endif%}
+                            {%endfor%}
+                        </select>
+                        <br><br>
+                        <button class="btn btn-secondary" id="add-cart" value='{{ product.id }}'>اضافه به سبد خرید</button>
+                    {%endif%}
 
-                    <br><br>
-                    <button class="btn btn-secondary" id="add-cart" value='{{ product.id }}'>اضافه به سبد خرید</button>
+
+
+
+<!--                    تعداد:-->
+<!--                    <select class="form-select" id="cart-qty">-->
+<!--                        <option value="1">1</option>-->
+<!--                        <option value="2">2</option>-->
+<!--                        <option value="3">3</option>-->
+<!--                        <option value="4">4</option>-->
+<!--                    </select>-->
+
+<!--                    <br><br>-->
+<!--                    <button class="btn btn-secondary" id="add-cart" value='{{ product.id }}'>اضافه به سبد خرید</button>-->
                     <a href="{% url 'home' %}" class="btn btn-secondary">بازگشت به صفحه اصلی</a>
                 </div>
                 </div>
@@ -95,6 +117,9 @@
                     location.reload();
             },
             error:function(xhr, errmsg, err){
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    alert(xhr.responseJSON.error);
+                }
 
             }
             
