@@ -29,6 +29,50 @@ class Category(models.Model):
             self.slug = self.slug.replace("-","")
         super().save(*args, **kwargs)
 
+class Attribute(models.Model):
+    TEXT = 'text'
+    NUMBER = 'number'
+    BOOLEAN = 'boolean'
+    SELECT = 'select'
+    VALUE_TYPES = (
+        (TEXT, 'Text'),
+        (NUMBER, 'Number'),
+        (BOOLEAN, 'Boolean'),
+        (SELECT, 'Select'),
+    )
+    name = models.CharField(max_length=150)
+    slug = models.SlugField(max_length=150,unique=True)
+    value_type = models.CharField(max_length=20, choices=VALUE_TYPES,default=TEXT)
+    is_filterable = models.BooleanField(default=False)
+    is_variant = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
+
+class AttributeOption(models.Model):
+    attribute = models.ForeignKey(Attribute,on_delete=models.CASCADE,related_name='options')
+    value = models.CharField(max_length=150)
+    slug = models.SlugField(max_length=150)
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['attribute','value'], name='unique_attribute_option')]
+    def __str__(self):
+        return f'{self.attribute.name}: {self.value}'
+
+class CategoryAttribute(models.Model):
+    category = models.ForeignKey(Category,on_delete=models.CASCADE,related_name='attributes')
+    attribute = models.ForeignKey(Attribute,on_delete=models.CASCADE,related_name='categories')
+    is_required = models.BooleanField(default=False)
+    is_filterable = models.BooleanField(default=True)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['sort_order','id']
+        constraints = [models.UniqueConstraint(fields=['category','attribute'], name='unique_category_attribute')]
+    def __str__(self):
+        return f'{self.category.name}:{self.attribute.name} '
+
+
 class Brand(models.Model):
     name = models.CharField(max_length=150,unique=True)
     slug = models.SlugField(unique=True)
@@ -82,6 +126,55 @@ class ProductMedia(models.Model):
 
     def __str__(self):
         return self.product.name
+
+
+class ProductAttributeValue(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='attribute_values')
+    attribute = models.ForeignKey(Attribute, on_delete=models.CASCADE, related_name='attributes')
+    text_value = models.CharField(max_length=500, blank=True, null=True)
+    number_value = models.DecimalField(max_digits=20, decimal_places=4, blank=True, null=True)
+    boolean_value = models.BooleanField(blank=True, null=True)
+    option_value = models.ForeignKey(AttributeOption, on_delete=models.CASCADE, related_name='product_values', blank=True, null=True)
+    multiple_option = models.ManyToManyField(AttributeOption, related_name='multiple_product_values', blank=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['product', 'attribute'], name='unique_product_attribute')]
+
+    def __str__(self):
+        return f'{self.product.name}:{self.attribute.name} '
+class ProductVariant(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
+    sku = models.CharField(max_length=100,unique=True)
+    combination_key = models.CharField(max_length=500,null=True,blank=True)
+    price = models.DecimalField(max_digits=20,decimal_places=0,null=True,blank=True)
+    sale_price = models.DecimalField(decimal_places=0,max_digits=20,null=True,blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['id']
+        constraints = [models.UniqueConstraint(fields=['product', 'combination_key'], name='unique_product_variant_combination')]
+
+    def generate_combination_key(self):
+        attributes = self.attributes.select_related('attribute','option_value').order_by('attribute_id')
+        return '|'.join(f'{item.attribue.slug}:{item.opton_value.slug}' for item in attributes)
+
+    def __str__(self):
+        return f'{self.product.name}:{self.sku}'
+
+class ProductVariantAttribute(models.Model):
+    variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, related_name='attributes')
+    attribute = models.ForeignKey(Attribute, on_delete=models.CASCADE, related_name='variant_values')
+    option_value = models.ForeignKey(AttributeOption, on_delete=models.CASCADE, related_name='variant_values',)
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['variant', 'attribute'], name='unique_variant_attribute'),
+        models.UniqueConstraint(fields=['variant', 'option_value'], name='unique_variant_option'),]
+
+    def __str__(self):
+        return f'{self.variant.sku}-{self.attribute.name}:{self.option_value.value} '
+
+
 
 class Inventory(models.Model):
     product = models.OneToOneField(Product,on_delete=models.CASCADE,related_name='inventory',null=True,blank=True)

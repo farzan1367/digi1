@@ -3,7 +3,7 @@ from django.utils.html import format_html
 from django.contrib.auth.models import User
 
 from . import models
-from .models import Category, Brand, Product,ProductMedia,Inventory
+from .models import Category, Brand, Product, ProductMedia, Inventory, ProductVariantAttribute, ProductVariant
 
 admin.site.register(models.Category)
 # admin.site.register(models.Product)
@@ -128,3 +128,14 @@ class ProductAdmin(admin.ModelAdmin):
     search_fields = ['name']
     inlines = [ProductMediaInline, InventoryInline]
     change_form_template = 'admin/shop/product/change_form.html'
+
+class ProductVariantAtrributeInline(admin.StackedInline):
+    model = ProductVariantAttribute
+    extra = 1
+
+@admin.register(ProductVariant)
+class ProductVariantAdmin(admin.ModelAdmin):
+    list_display = ['product', 'sku', 'price''sale_price','is_active',]
+    list_filter = [ 'is_active']
+    search_fields = ['sku','product__name']
+    inlines = [ProductVariantAtrributeInline]
